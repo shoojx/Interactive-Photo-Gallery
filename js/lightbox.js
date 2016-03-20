@@ -1,3 +1,4 @@
+//backupArray is only here to get around the issue where the ajax request isn't properly processed since it's not hosted on a webserver [otherwise this page wont work in Chrome, IE, or Edge]
 var backupArray = [
 {
 	"file": "01.jpg", 
@@ -66,34 +67,106 @@ var imageTag = [
 	'" onclick="',
 	'"></div>'
 ];
+var lightTag = [
+	'<div id="container"><div id="left-arrow" onclick="prevSib(event)">',
+	'&#10151;</a></div><div id="image"><img id="lightbox-image" src="',
+	'"></div><div id="right-arrow" onclick="nextSib(event)">',
+	'&#10151;</div><p id="lightbox-description">',
+	'</p></div>'
+]
 var userAgent = navigator.userAgent;
-var clickFunction = 'renderSpotlight()';
+var clickFunction = 'showSpotlight(this)';
+var hideFunction = 'hideSpotlight()';
 var imageDirectory = './img/';
 var thumbDirectory = './img/Thumbnails/';
-var ajaxRequest = new XMLHttpRequest();
 var jsonData = './db/images.json';
+var ajaxRequest = new XMLHttpRequest();
+var lightboxPosition;
+var lightboxLength;
+var lightboxList;
 
-function renderThumbs(thumbs) {
+function renderThumbs(thumbs) { //could have streamlined hidden spotlight images into page
+	lightboxList = thumbs;
+	lightboxLength = thumbs.length - 1;
 	var embedHTML = document.getElementById('gallery-thumbnails');
-	var imgTag = '';
+	var galleryContent = '';
 	embedHTML.innerHTML = '';
 	for (var i = 0; i < thumbs.length; i += 1) {
-		imgTag += imageTag[0];
-		imgTag += thumbDirectory + thumbs[i].file;
-		imgTag += imageTag[1];
-		imgTag += thumbs[i].title;
-		imgTag += imageTag[2];
-		imgTag += clickFunction;
-		imgTag += imageTag[3];
+		galleryContent += imageTag[0];
+		galleryContent += thumbDirectory + thumbs[i].file;
+		galleryContent += imageTag[1];
+		galleryContent += thumbs[i].title;
+		galleryContent += imageTag[2];
+		galleryContent += clickFunction;
+		galleryContent += imageTag[3];
 	}
-	embedHTML.innerHTML += imgTag;
+	embedHTML.innerHTML += galleryContent;
 }
 
-function renderSpotlight() { 
-	console.log('stubbed function - you need to add lightbox functionality');
-	//Add lightbox
-	//change css of hidden lightbox to display: whatever
-	//<img src=""
+function showSpotlight(image) { //could have done better with the lightTag variable and cut out the 'prevSib()' and 'nextSib()' functions and made them their own variables -- can be hard to follow all the mashups without cross-comparing lightTag and showSpotlight()
+	var embedHTML = document.getElementById('lightbox');
+	var lightboxContent = '';
+	for (var i = 0; i < lightboxList.length; i += 1) {
+		if (image.alt.indexOf(lightboxList[i].title) >= 0) {
+			var lightboxImage = lightboxList[i];
+			lightboxPosition = i;
+			lightboxContent += lightTag[0];
+			lightboxContent += lightTag[1];
+			lightboxContent += imageDirectory + lightboxImage.file;
+			lightboxContent += lightTag[2];
+			lightboxContent += lightTag[3] + lightboxImage.description;
+			lightboxContent += lightTag[4];
+			document.getElementById('lightbox').removeAttribute('class', 'hidden');
+			embedHTML.innerHTML = lightboxContent;
+			checkArrows();
+		}
+	}
+}
+
+function hideSpotlight() {
+	document.getElementById('lightbox').setAttribute('class', 'hidden');
+}
+
+function nextSib(event) {
+	if (lightboxPosition < lightboxLength) {
+		lightboxPosition += 1;
+		document.getElementById('lightbox-image').setAttribute('src', imageDirectory + lightboxList[lightboxPosition].file);
+		document.getElementById('lightbox-description').innerHTML = lightboxList[lightboxPosition].description;
+	}
+	checkArrows();
+	stopProp(event);
+}
+
+function prevSib(event) {
+	if (lightboxPosition > 0) {
+		lightboxPosition -= 1;
+		document.getElementById('lightbox-image').setAttribute('src', imageDirectory + lightboxList[lightboxPosition].file);
+		document.getElementById('lightbox-description').innerHTML = lightboxList[lightboxPosition].description;
+	} 
+	checkArrows();
+	stopProp(event);
+}
+
+function checkArrows() {
+	if (lightboxPosition < lightboxLength)  {
+		document.getElementById('right-arrow').setAttribute('class', 'enabled');
+	} else {
+		document.getElementById('right-arrow').setAttribute('class', 'disabled');
+	}
+	if (lightboxPosition > 0) {
+		document.getElementById('left-arrow').setAttribute('class', 'enabled');
+	} else {
+		document.getElementById('left-arrow').setAttribute('class', 'disabled');
+	}
+}
+
+function stopProp(event) {
+	var e = event || window.event;
+	if (e.stopPropogation) {
+		e.stopPropogation;
+	} else {
+		e.cancelBubble = true;
+	}
 }
 
 function ajaxCall() {
