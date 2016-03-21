@@ -73,7 +73,7 @@ var lightTag = [
 	'"></div><div id="right-arrow" onclick="nextSib(event)">',
 	'&#10151;</div><p id="lightbox-description">',
 	'</p></div>'
-]
+];
 var userAgent = navigator.userAgent;
 var clickFunction = 'showSpotlight(this)';
 var hideFunction = 'hideSpotlight()';
